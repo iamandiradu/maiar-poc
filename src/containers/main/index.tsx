@@ -1,10 +1,10 @@
-import {View, useColorScheme} from 'react-native';
+import { View, useColorScheme } from 'react-native';
 
-import Header from '../../components/MockHeader';
-import Content from '../../components/MockContent';
+import { Header } from '../../components/MockHeader';
+import { Content } from '../../components/MockContent';
+import { Footer } from '../../components/MockFooter';
 
-import Footer from '../../components/MockFooter';
-import {styleSet} from './styles';
+import { styleSet } from './styles';
 interface Main {}
 
 const Main = () => {

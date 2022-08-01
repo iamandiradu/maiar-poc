@@ -1,14 +1,11 @@
-import {Image, ScrollView} from 'react-native';
-import {styles} from './styles';
+import { ScrollView } from 'react-native';
+import { styles } from './styles';
 
-const mock = require('../../assets/images/content.png');
-const Header = () => {
+export const Content = () => {
   // TODO: offsets & insets
   return (
-    <ScrollView style={styles.contentWrapper} contentInset={{top: 100}}>
-      <Image source={mock} resizeMode={'contain'} style={styles.content} />
+    <ScrollView style={styles.contentWrapper} contentInset={{ top: 100 }}>
+      {/* Flatlist */}
     </ScrollView>
   );
 };
-
-export default Header;
