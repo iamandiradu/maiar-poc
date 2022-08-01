@@ -11,7 +11,7 @@ interface FlipCard {
 const FlipCard = (props: FlipCard) => {
     const { sides } = props;
 
-    const [side, setSide] = useState(0);
+    const [side, setSide] = useState(1);
 
     const flip = () => {
         setSide(Number(!side));

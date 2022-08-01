@@ -14,14 +14,14 @@ const Main = () => {
     const colorScheme = useColorScheme() || 'dark';
     const styles = styleSet(colorScheme);
 
-    // const [scrollPos, setScrollPos] = useState(0);
-    const scrollPos = useSharedValue(0);
-    // console.log(scrollPos);
+    // Share Pan position thoughout the other components
+    const panPosition = useSharedValue(0);
+
     return (
         <View style={styles.content}>
             <Header />
-            <Carousel scrollPos={scrollPos} />
-            <Content scrollPos={scrollPos} />
+            <Carousel panPosition={panPosition} />
+            <Content panPosition={panPosition} />
             <Footer />
         </View>
     );

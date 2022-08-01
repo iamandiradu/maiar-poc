@@ -2,16 +2,12 @@ import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
     cardWrapper: {
-        // height: 200,
         maxHeight: 200,
         width: 180,
         backgroundColor: '#D9D9D9',
         borderRadius: 10,
         paddingVertical: 16,
         paddingHorizontal: 13,
-    },
-    header: {
-        height: 20,
     },
     title: {
         fontWeight: '400',
