@@ -1,9 +1,9 @@
-/* eslint-disable react-native/no-inline-styles */
-import { useState, useRef, LegacyRef } from 'react';
-import { View } from 'react-native';
+import { useState, useRef } from 'react';
+import { View, NativeScrollEvent } from 'react-native';
 import Animated, {
     useAnimatedGestureHandler,
-    useAnimatedStyle,
+    runOnJS,
+    withTiming,
 } from 'react-native-reanimated';
 import {
     PanGestureHandler,
@@ -11,31 +11,23 @@ import {
     PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 
-// import { styles } from './styles';
+import { styles } from './styles';
 
 interface Content {
-    scrollPos: Animated.SharedValue<number>;
+    panPosition: Animated.SharedValue<number>;
 }
 
+const PAN_TOP_LIMIT = -133;
+const PAN_BOTTOM_LIMIT = 0;
+
 const Content = (props: Content) => {
-    const { scrollPos } = props;
-    const scrollRef = useRef<LegacyRef<ScrollView>>();
+    const { panPosition } = props;
+    const scrollRef = useRef<ScrollView | null>(null);
     const panHanRef = useRef<PanGestureHandler>();
     const [panEnabled, setPanEnabled] = useState(true);
 
-    const renderItem = (item: number, index: number) => {
-        return (
-            <View
-                style={{
-                    height: 80,
-                    width: '100%',
-                    backgroundColor: '#D9D9D9',
-                    marginBottom: 12,
-                    borderRadius: 10,
-                }}
-                key={index}
-            />
-        );
+    const renderItem = (_item: number, index: number) => {
+        return <View style={styles.scrollItem} key={index} />;
     };
 
     const _onGesture = useAnimatedGestureHandler<
@@ -43,99 +35,68 @@ const Content = (props: Content) => {
         { y: number }
     >({
         onStart: (_, context) => {
-            context.y = scrollPos.value;
+            // Store Pan position
+            context.y = panPosition.value;
         },
         onActive: ({ translationY }, context) => {
-            const pos = translationY + context.y;
-
-            scrollPos.value = pos;
+            // Prevent momentum
+            const pos = Math.max(translationY + context.y, PAN_TOP_LIMIT);
+            panPosition.value = pos;
+            // Enable Scroll on Pan limits
+            if (pos >= PAN_BOTTOM_LIMIT || pos <= PAN_TOP_LIMIT) {
+                // Toggle between PanGestureHandler & ScrollView
+                runOnJS(setPanEnabled)(false);
+            }
+        },
+        onEnd: () => {
+            // Ease in to the Pan limits
+            if (panPosition.value < PAN_TOP_LIMIT / 2) {
+                panPosition.value = withTiming(PAN_TOP_LIMIT);
+            } else {
+                panPosition.value = withTiming(0);
+            }
         },
     });
-    // const _onGesturex = event => {
-    //     const { translationY } = event.nativeEvent;
-    //     const totalTranslationY = translationY + scrollPos.value;
-    //     // const prevTranslation = y.value;
-    //     // console.log('PAN:', translationY, ' PREV: ', totalTranslationY);
-    //     // if (!panEnabled) return;
-    //     if (translationY > 0) {
-    //         // setPanEnabled(false);
-    //     } else {
-    //         // setPanEnabled(true);
-    //     }
-    //     // Reverse of ScrollView Pos axis
-    //     // getScrollPos(-translationY);
 
-    //     if (translationY < -100) {
-    //         // console.log('SHOULD STOP');
-    //         // setPanEnabled(false);
-    //     }
-    //     // const { translationY } = event.nativeEvent;
-    //     // console.log(translationY);
-    //     // getScrollPos(-translationY); // Reverse of ScrollView Pos axis
-    //     scrollPos.value = translationY;
-    // };
+    const _onScroll = ({ nativeEvent }: { nativeEvent: NativeScrollEvent }) => {
+        // Enable Pan on Scroll release
+        if (
+            nativeEvent.contentOffset.y >= -1 &&
+            panPosition.value >= PAN_TOP_LIMIT &&
+            !panEnabled
+        ) {
+            // Prevent momentum
+            if (panPosition.value > 0) {
+                panPosition.value = 0;
+            }
 
-    //@ts-ignore
-    const _onScroll = ({ nativeEvent }) => {
-        console.log('SCROLL: ', nativeEvent.contentOffset.y);
-        if (nativeEvent.contentOffset.y <= 0 && !panEnabled) {
-            setPanEnabled(true);
-        }
-        if (nativeEvent.contentOffset.y > 0 && panEnabled) {
+            // Toggle between PanGestureHandler & ScrollView
             setPanEnabled(true);
         }
     };
 
-    const scrollViewStyle = useAnimatedStyle(() => ({
-        transform: [{ translateY: scrollPos.value }],
-    }));
-    // return (
-    //     <ScrollView
-    //         style={[
-    //             styles.contentWrapper,
-    //             // { maxHeight: styles.contentWrapper.maxHeight + scrollPos },
-    //         ]}
-    //         contentContainerStyle={{ flexGrow: 1, padding: 13 }}
-    //         // contentOffset={{ top: scrollPos }}
-    //         maintainVisibleContentPosition={{
-    //             minIndexForVisible: 1,
-    //             autoscrollToTopThreshold: 0,
-    //         }}
-    //         showsVerticalScrollIndicator
-    //         onScroll={e => getScrollPos(e.nativeEvent.contentOffset.y)}
-    //         ref={scrollRef}
-    //         // onMomentumScrollEnd={e => {
-    //         //     if (e.nativeEvent.contentOffset.y > 0) {
-    //         //         getScrollPos(250);
-    //         //     } else {
-    //         //         getScrollPos(0);
-    //         //     }
-    //         // }}
-    //         scrollEventThrottle={1}
-    //         // disableIntervalMomentum
-    //         bounces={false}
-    //         alwaysBounceVertical={false}
-    //         // overScrollMode={'always'}
-    //         // snapToEnd={false}
-    //     >
-    //         {[1, 2, 3, 4, 5].map((item, index) => renderItem(item, index))}
-    //     </ScrollView>
-    // );
+    const snapScrollToTop = () =>
+        scrollRef.current?.scrollTo({ x: 0, y: 0, animated: true });
 
     return (
         <ScrollView
-            //@ts-ignore
             ref={scrollRef}
             waitFor={panEnabled ? panHanRef : scrollRef}
-            scrollEventThrottle={40}
-            onScroll={_onScroll}>
+            simultaneousHandlers={[panHanRef, scrollRef]}
+            scrollEventThrottle={16}
+            onScroll={_onScroll}
+            onScrollEndDrag={snapScrollToTop}
+            style={styles.contentWrapper}
+            enabled={!panEnabled}
+            showsVerticalScrollIndicator={false}>
             <PanGestureHandler
                 enabled={panEnabled}
                 ref={panHanRef}
+                waitFor={panEnabled ? panHanRef : scrollRef}
+                simultaneousHandlers={[panHanRef, scrollRef]}
                 activeOffsetY={[-5, 5]}
-                failOffsetY={5}
                 onGestureEvent={_onGesture}>
-                <Animated.View style={scrollViewStyle}>
+                <Animated.View>
                     {[1, 2, 3, 4, 5].map((item, index) =>
                         renderItem(item, index),
                     )}
