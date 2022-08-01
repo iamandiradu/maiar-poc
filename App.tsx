@@ -9,19 +9,19 @@
  */
 
 import React from 'react';
-import {SafeAreaView, StatusBar, useColorScheme} from 'react-native';
+import { SafeAreaView, StatusBar, useColorScheme } from 'react-native';
 import Main from './src/containers/main';
 
 const App = () => {
-  // Defaults to dark
-  const colorScheme = useColorScheme() || 'dark';
+    // Defaults to dark
+    const colorScheme = useColorScheme() || 'dark';
 
-  return (
-    <SafeAreaView>
-      <StatusBar barStyle={`${colorScheme}-content`} />
-      <Main />
-    </SafeAreaView>
-  );
+    return (
+        <SafeAreaView>
+            <StatusBar barStyle={`${colorScheme}-content`} />
+            <Main />
+        </SafeAreaView>
+    );
 };
 
 export default App;
