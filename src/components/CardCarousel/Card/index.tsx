@@ -1,5 +1,10 @@
-import { Text } from 'react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { useState } from 'react';
+import { LayoutAnimation } from 'react-native';
+import Animated, {
+    useAnimatedStyle,
+    useDerivedValue,
+    runOnJS,
+} from 'react-native-reanimated';
 import { styles } from './styles';
 
 interface Card {
@@ -7,29 +12,45 @@ interface Card {
     value?: string;
     panPosition: Animated.SharedValue<number>;
 }
+const FLEX_LIMIT = 65;
 const Card = (props: Card) => {
     const { title, value, panPosition } = props;
 
-    const viewStyle = useAnimatedStyle(() => ({
-        height: styles.cardWrapper.maxHeight + panPosition.value,
-    }));
+    const [flexDirection, setFlexDirection] = useState<
+        number | 'row' | 'column' | 'row-reverse' | 'column-reverse' | undefined
+    >('column');
 
-    /* TODO: FLEX DIRECTION FIX */
-    const cardStyle = useAnimatedStyle(() => {
-        const elHeight = styles.cardWrapper.maxHeight;
-        const flexDir =
-            elHeight + panPosition.value < elHeight * 0.75 ? 'row' : 'column';
-        // console.log(flexDir);
-        return {
-            flexDirection: flexDir,
-        };
+    const viewStyle = useAnimatedStyle(
+        () => ({
+            height: styles.cardWrapper.maxHeight + panPosition.value,
+        }),
+        [panPosition.value],
+    );
+
+    const switchFlexDirection = () => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        if (flexDirection === 'column') {
+            setFlexDirection('row');
+        } else {
+            setFlexDirection('column');
+        }
+    };
+
+    useDerivedValue(() => {
+        if (-panPosition.value > FLEX_LIMIT) {
+            runOnJS(switchFlexDirection)();
+        }
+        return {};
     });
 
     return (
         <Animated.View style={[styles.cardWrapper, viewStyle]}>
-            <Animated.View style={[styles.cardContent, cardStyle]}>
-                <Text style={styles.title}>{title}</Text>
-                {!!value && <Text style={styles.value}>{value}</Text>}
+            <Animated.View
+                style={[styles.cardContent, { flexDirection: flexDirection }]}>
+                <Animated.Text style={styles.title}>{title}</Animated.Text>
+                {!!value && (
+                    <Animated.Text style={styles.value}>{value}</Animated.Text>
+                )}
             </Animated.View>
         </Animated.View>
     );
