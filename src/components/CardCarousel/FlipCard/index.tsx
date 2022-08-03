@@ -1,7 +1,7 @@
 import { useState, ReactElement } from 'react';
 import { Pressable } from 'react-native';
 
-import ReanimatedFlip, { RotateAxis } from 'react-native-flip';
+import ReanimatedFlip, { RotateAxis } from './package';
 import { styles } from './styles';
 
 interface FlipCard {
