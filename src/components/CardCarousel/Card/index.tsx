@@ -16,16 +16,18 @@ const FLEX_LIMIT = 65;
 const Card = (props: Card) => {
     const { title, value, panPosition } = props;
 
-    const [flexDirection, setFlexDirection] = useState<
-        number | 'row' | 'column' | 'row-reverse' | 'column-reverse' | undefined
-    >('column');
-
+    // Animated Card height
     const viewStyle = useAnimatedStyle(
         () => ({
             height: styles.cardWrapper.maxHeight + panPosition.value,
         }),
         [panPosition.value],
     );
+
+    // Flex directionm change is not functional
+    const [flexDirection, setFlexDirection] = useState<
+        number | 'row' | 'column' | 'row-reverse' | 'column-reverse' | undefined
+    >('column');
 
     const switchFlexDirection = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
