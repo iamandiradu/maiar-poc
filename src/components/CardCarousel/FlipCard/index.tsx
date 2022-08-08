@@ -6,10 +6,11 @@ import { styles } from './styles';
 
 interface FlipCard {
     sides: ReactElement[];
+    index?: number | string;
 }
 
 const FlipCard = (props: FlipCard) => {
-    const { sides } = props;
+    const { sides, index } = props;
 
     const [side, setSide] = useState(1);
 
@@ -18,8 +19,9 @@ const FlipCard = (props: FlipCard) => {
     };
 
     return (
-        <Pressable onPress={flip}>
+        <Pressable onPress={flip} key={index}>
             <ReanimatedFlip
+                key={`${index}-2`}
                 side={side}
                 rotate={RotateAxis.Y}
                 style={styles.container}

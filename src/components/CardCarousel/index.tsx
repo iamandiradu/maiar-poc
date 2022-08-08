@@ -1,104 +1,60 @@
-import { FlatList, View } from 'react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
-
+import Animated from 'react-native-reanimated';
+import { useColorScheme } from 'react-native';
+import { mockData, mockDataType } from '../../assets/constants';
 import { Card } from './Card';
 import { FlipCard } from './FlipCard';
-import { styles } from './styles';
-
-type dataType = {
-    front: {
-        title: string;
-        value: string;
-    };
-    back?: {
-        title: string;
-        value: string;
-    };
-};
-const mockData = [
-    {
-        front: {
-            title: 'FLIP 1',
-            value: '$123,45',
-        },
-        back: {
-            title: 'BACK 1',
-            value: '$543,21',
-        },
-    },
-    {
-        front: {
-            title: 'CARD 2',
-            value: '$123,45',
-        },
-    },
-    {
-        front: {
-            title: 'FLIP 3',
-            value: '$123,45',
-        },
-        back: {
-            title: 'BACK 3',
-            value: '$543,21',
-        },
-    },
-    {
-        front: {
-            title: 'CARD 4',
-            value: '$123,45',
-        },
-    },
-];
+import { styleSet } from './styles';
 
 interface Carousel {
-    panPosition: Animated.SharedValue<number>;
+    carouselHeight: Animated.SharedValue<number>;
 }
 const Carousel = (props: Carousel) => {
-    const { panPosition } = props;
+    const { carouselHeight } = props;
 
-    const renderCard = ({ item }: { item: dataType }) => {
+    const colorScheme = useColorScheme() || 'dark';
+    const styles = styleSet(colorScheme);
+
+    const renderCard = (item: mockDataType, index: number) => {
         return item?.back ? (
             <FlipCard
+                key={`${index}-flip`}
                 sides={[
                     <Card
                         title={item?.front?.title}
                         value={item?.front?.value}
-                        panPosition={panPosition}
+                        key={`${index}-front`}
+                        index={`${index}-front1`}
+                        cardHeight={carouselHeight}
                     />,
                     <Card
                         title={item?.back?.title}
                         value={item?.back?.value}
-                        panPosition={panPosition}
+                        key={`${index}-back`}
+                        index={`${index}-back1`}
+                        cardHeight={carouselHeight}
                     />,
                 ]}
             />
         ) : (
             <Card
+                key={`${index}-card`}
+                index={`${index}-card1`}
                 title={item?.front?.title}
                 value={item?.front?.value}
-                panPosition={panPosition}
+                cardHeight={carouselHeight}
             />
         );
     };
 
-    const viewStyle = useAnimatedStyle(() => ({
-        height: styles.wrapper.height + panPosition.value,
-    }));
-
     return (
-        <Animated.View style={[styles.wrapper, viewStyle]}>
-            <FlatList
-                contentOffset={{ x: -15, y: 0 }}
-                contentInset={{ left: 15 }}
-                contentContainerStyle={styles.contentContainer}
-                horizontal
-                showsVerticalScrollIndicator={false}
-                data={mockData}
-                renderItem={renderCard}
-                showsHorizontalScrollIndicator={false}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-            />
-        </Animated.View>
+        <Animated.ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.carousel}
+            contentInset={{ left: 15 }}
+            contentOffset={{ x: -15, y: 0 }}>
+            {mockData.map((item, index) => renderCard(item, index))}
+        </Animated.ScrollView>
     );
 };
 
